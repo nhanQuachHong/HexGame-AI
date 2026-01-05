@@ -30,5 +30,57 @@ public class HexGame {
 
     public boolean isEmpty(int r, int c) { return board[r][c] == EMPTY; }
 
-    // TODO   : logic check win
+
+    public int checkWinner() {
+        if (hasPlayerWon(RED)) return RED;
+        if (hasPlayerWon(BLUE)) return BLUE;
+        return EMPTY;
+    }
+    public boolean hasPlayerWon(int player) {
+        boolean[][] visited = new boolean[n][n];
+        java.util.Deque<int[]> stack = new java.util.ArrayDeque<>();
+        int[][] dirs = {{-1,0},{-1,1},{0,-1},{0,1},{1,-1},{1,0}};
+
+        if (player == RED) {
+            for (int c = 0; c < n; c++) {
+                if (board[0][c] == RED) {
+                    visited[0][c] = true;
+                    stack.push(new int[]{0, c});
+                }
+            }
+            while (!stack.isEmpty()) {
+                int[] p = stack.pop();
+                int r = p[0], c = p[1];
+                if (r == n - 1) return true;
+                for (int[] d : dirs) {
+                    int nr = r + d[0], nc = c + d[1];
+                    if (nr >= 0 && nr < n && nc >= 0 && nc < n && !visited[nr][nc] && board[nr][nc] == RED) {
+                        visited[nr][nc] = true;
+                        stack.push(new int[]{nr, nc});
+                    }
+                }
+            }
+        } else if (player == BLUE) {
+            for (int r = 0; r < n; r++) {
+                if (board[r][0] == BLUE) {
+                    visited[r][0] = true;
+                    stack.push(new int[]{r, 0});
+                }
+            }
+            while (!stack.isEmpty()) {
+                int[] p = stack.pop();
+                int r = p[0], c = p[1];
+                if (c == n - 1) return true;
+                for (int[] d : dirs) {
+                    int nr = r + d[0], nc = c + d[1];
+                    if (nr >= 0 && nr < n && nc >= 0 && nc < n && !visited[nr][nc] && board[nr][nc] == BLUE) {
+                        visited[nr][nc] = true;
+                        stack.push(new int[]{nr, nc});
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
 }

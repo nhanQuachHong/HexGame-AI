@@ -58,7 +58,7 @@ public class HexAI {
                 if (beta <= alpha) break; 
             }
             return maxEval;
-        } else { // MIN (RED)
+        } else { 
             int minEval = INF;
             for (int[] move : moves) {
                 game.place(move[0], move[1], HexGame.RED);
@@ -67,7 +67,7 @@ public class HexAI {
 
                 if (eval < minEval) minEval = eval;
                 if (minEval < beta) beta = minEval;
-                if (beta <= alpha) break; // Cắt tỉa
+                if (beta <= alpha) break; 
             }
             return minEval;
         }
@@ -76,11 +76,6 @@ public class HexAI {
     private int heuristic() {
         int blueDist = getShortestPath(HexGame.BLUE);
         int redDist = getShortestPath(HexGame.RED);
-
-        if (redDist >= INF/2) return WIN_SCORE / 2; 
-        
-        if (blueDist >= INF/2) return -WIN_SCORE / 2;
-
         return (redDist - blueDist) * 100;
     }
 

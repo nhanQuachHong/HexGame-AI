@@ -12,7 +12,8 @@ public class HexFrame extends JFrame{
     public HexFrame(int n) {
         setTitle("Hex Game");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(800, 800);
+        setSize(700, 1200);
+        setLocationRelativeTo(null);
 
         game = new HexGame(n);
         ai = new HexAI(game);
