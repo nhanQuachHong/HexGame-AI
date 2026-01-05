@@ -19,3 +19,4 @@ public class HexController {
         // handle user input
         // update view
 }
+}
