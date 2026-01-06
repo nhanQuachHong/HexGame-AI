@@ -98,37 +98,42 @@ public class HexAI {
         int n = state.getSize();
         int[][] board = state.getBoard();
         int[][] dist = new int[n][n];
-        
-        for(int[] row : dist) Arrays.fill(row, INF);
-        PriorityQueue<Node> pq = new PriorityQueue<>(Comparator.comparingInt(node -> node.cost));
+        for (int[] row : dist) Arrays.fill(row, INF);
 
-        if (player == HexGame.RED) {
-            for (int c = 0; c < n; c++) {
-                int cost = (board[0][c] == player) ? 0 : (board[0][c] == HexGame.EMPTY ? 1 : INF);
-                if (cost != INF) { dist[0][c] = cost; pq.add(new Node(0, c, cost)); }
-            }
-        } else {
-            for (int r = 0; r < n; r++) {
-                int cost = (board[r][0] == player) ? 0 : (board[r][0] == HexGame.EMPTY ? 1 : INF);
-                if (cost != INF) { dist[r][0] = cost; pq.add(new Node(r, 0, cost)); }
+        PriorityQueue<int[]> pq = new PriorityQueue<>(Comparator.comparingInt(a -> a[2]));
+
+        for (int i = 0; i < n; i++) {
+            int r = (player == HexGame.RED) ? 0 : i;
+            int c = (player == HexGame.RED) ? i : 0;
+            
+            int cost = (board[r][c] == player) ? 0 : (board[r][c] == HexGame.EMPTY ? 1 : INF);
+            
+            if (cost != INF) {
+                dist[r][c] = cost;
+                pq.add(new int[]{r, c, cost});
             }
         }
-        
-        int[][] dirs = {{-1,0},{-1,1},{0,-1},{0,1},{1,-1},{1,0}};
+
+        int[][] dirs = {{-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}};
         while (!pq.isEmpty()) {
-            Node current = pq.poll();
-            if (current.cost > dist[current.r][current.c]) continue;
+            int[] cur = pq.poll();
+            int r = cur[0], c = cur[1], cost = cur[2];
+
+            if (cost > dist[r][c]) continue;
             
-            if (player == HexGame.RED && current.r == n - 1) return current.cost;
-            if (player == HexGame.BLUE && current.c == n - 1) return current.cost;
+            if ((player == HexGame.RED && r == n - 1) || (player == HexGame.BLUE && c == n - 1)) {
+                return cost;
+            }
 
             for (int[] d : dirs) {
-                int nr = current.r + d[0], nc = current.c + d[1];
+                int nr = r + d[0], nc = c + d[1];
                 if (nr >= 0 && nr < n && nc >= 0 && nc < n) {
-                    int moveCost = (board[nr][nc] == player) ? 0 : (board[nr][nc] == HexGame.EMPTY ? 1 : INF);
-                    if (moveCost != INF && dist[current.r][current.c] + moveCost < dist[nr][nc]) {
-                        dist[nr][nc] = dist[current.r][current.c] + moveCost;
-                        pq.add(new Node(nr, nc, dist[nr][nc]));
+                    int cell = board[nr][nc];
+                    int weight = (cell == player) ? 0 : (cell == HexGame.EMPTY ? 1 : INF);
+                    
+                    if (weight != INF && cost + weight < dist[nr][nc]) {
+                        dist[nr][nc] = cost + weight;
+                        pq.add(new int[]{nr, nc, dist[nr][nc]});
                     }
                 }
             }
@@ -175,8 +180,5 @@ public class HexAI {
         return moves;
     }
 
-    private static class Node {
-        int r, c, cost;
-        public Node(int r, int c, int cst) { this.r=r; this.c=c; this.cost=cst; }
-    }
+   
 }
