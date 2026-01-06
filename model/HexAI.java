@@ -23,7 +23,7 @@ public class HexAI {
             int r = move[0];
             int c = move[1];
 
-            HexGame childState = this.game.deepCopy();
+            HexGame childState = this.game.copy(); 
             childState.place(r, c, HexGame.BLUE);
 
             int val = minimax(childState, false, depth - 1, alpha, beta);
@@ -61,10 +61,10 @@ public class HexAI {
                 if (beta <= alpha) break;
             }
             return maxEval;
-        } else { 
+        } else {
             int minEval = INF;
             for (int[] move : moves) {
-                HexGame childState = state.deepCopy();
+                HexGame childState = state.copy();
                 childState.place(move[0], move[1], HexGame.RED);
 
                 int eval = minimax(childState, true, depth - 1, alpha, beta);
@@ -156,11 +156,22 @@ public class HexAI {
     private List<int[]> getOrderedMoves(HexGame state) {
         List<int[]> moves = new ArrayList<>();
         int n = state.getSize();
+        int center = n / 2;
+
         for (int r = 0; r < n; r++) {
             for (int c = 0; c < n; c++) {
-                if (state.isEmpty(r, c)) moves.add(new int[]{r, c});
+                if (state.isEmpty(r, c)) {
+                    moves.add(new int[]{r, c});
+                }
             }
         }
+
+        Collections.sort(moves, (a, b) -> {
+            int distA = Math.abs(a[0] - center) + Math.abs(a[1] - center);
+            int distB = Math.abs(b[0] - center) + Math.abs(b[1] - center);
+            return Integer.compare(distA, distB);
+        });
+
         return moves;
     }
 
