@@ -2,6 +2,7 @@ package model;
 
 public class HexGame {
     public static final int EMPTY = 0, RED = 1, BLUE = 2;
+    
     private int n;
     private int[][] board;
     private int current;
@@ -9,11 +10,25 @@ public class HexGame {
     public HexGame(int n) {
         this.n = n;
         board = new int[n][n];
-        current = RED;
-    }
+        current = RED; 
+        }
 
+public HexGame copy() {
+    HexGame newGame = new HexGame(this.getSize());
+    int[][] newBoard = newGame.getBoard();
+    int[][] oldBoard = this.getBoard();
+    
+    for (int i = 0; i < this.getSize(); i++) {
+        for (int j = 0; j < this.getSize(); j++) {
+            newBoard[i][j] = oldBoard[i][j];
+        }
+    }
+    return newGame;
+}
     public int getSize() { return n; }
+    
     public int[][] getBoard() { return board; }
+    
     public int getCurrent() { return current; }
 
     public boolean place(int r, int c, int player) {
@@ -23,19 +38,16 @@ public class HexGame {
         return true;
     }
 
-    public void undo(int r, int c, int prevPlayer) {
-        board[r][c] = EMPTY;
-        current = prevPlayer;
+    public boolean isEmpty(int r, int c) { 
+        return board[r][c] == EMPTY; 
     }
-
-    public boolean isEmpty(int r, int c) { return board[r][c] == EMPTY; }
-
 
     public int checkWinner() {
         if (hasPlayerWon(RED)) return RED;
         if (hasPlayerWon(BLUE)) return BLUE;
         return EMPTY;
     }
+
     public boolean hasPlayerWon(int player) {
         boolean[][] visited = new boolean[n][n];
         java.util.Deque<int[]> stack = new java.util.ArrayDeque<>();
@@ -80,7 +92,6 @@ public class HexGame {
                 }
             }
         }
-
         return false;
     }
 }

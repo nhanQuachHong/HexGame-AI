@@ -4,8 +4,8 @@ import java.util.*;
 
 public class HexAI {
     private HexGame game;
-    private final int INF = 1000000000; 
-    private final int WIN_SCORE = 100000; 
+    private final int INF = 1000000000;
+    private final int WIN_SCORE = 100000;
 
     public HexAI(HexGame game) {
         this.game = game;
@@ -14,20 +14,19 @@ public class HexAI {
     public int[] bestMove(int depth) {
         int[] bestMove = null;
         int maxVal = -INF;
-        int n = game.getSize();
         int alpha = -INF;
         int beta = INF;
 
-        List<int[]> moves = getOrderedMoves();
+        List<int[]> moves = getOrderedMoves(this.game);
 
         for (int[] move : moves) {
             int r = move[0];
             int c = move[1];
-            game.place(r, c, HexGame.BLUE); 
-            
-            int val = minimax(false, depth - 1, alpha, beta);
-            
-            game.undo(r, c, HexGame.BLUE); 
+
+            HexGame childState = this.game.deepCopy();
+            childState.place(r, c, HexGame.BLUE);
+
+            int val = minimax(childState, false, depth - 1, alpha, beta);
 
             if (val > maxVal) {
                 maxVal = val;
@@ -38,51 +37,68 @@ public class HexAI {
         return bestMove;
     }
 
-    public int minimax(boolean maxmin, int depth, int alpha, int beta) {
-        int winner = game.checkWinner();
-        if (winner == HexGame.BLUE) return WIN_SCORE + depth; 
+    public int minimax(HexGame state, boolean maxmin, int depth, int alpha, int beta) {
+        int winner = state.checkWinner();
+        if (winner == HexGame.BLUE) return WIN_SCORE + depth;
         if (winner == HexGame.RED) return -WIN_SCORE - depth;
+        
         if (depth == 0) {
-            return heuristic();
+            return heuristic(state);
         }
-        List<int[]> moves = getOrderedMoves();
-        if (maxmin == true) { 
+
+        List<int[]> moves = getOrderedMoves(state);
+
+        if (maxmin) {
             int maxEval = -INF;
             for (int[] move : moves) {
-                game.place(move[0], move[1], HexGame.BLUE);
-                int eval = minimax(false, depth - 1, alpha, beta);
-                game.undo(move[0], move[1], HexGame.BLUE);
+                HexGame childState = state.copy();
+                childState.place(move[0], move[1], HexGame.BLUE);
+
+                int eval = minimax(childState, false, depth - 1, alpha, beta);
 
                 if (eval > maxEval) maxEval = eval;
                 if (maxEval > alpha) alpha = maxEval;
-                if (beta <= alpha) break; 
+                if (beta <= alpha) break;
             }
             return maxEval;
         } else { 
             int minEval = INF;
             for (int[] move : moves) {
-                game.place(move[0], move[1], HexGame.RED);
-                int eval = minimax(true, depth - 1, alpha, beta);
-                game.undo(move[0], move[1], HexGame.RED);
+                HexGame childState = state.deepCopy();
+                childState.place(move[0], move[1], HexGame.RED);
+
+                int eval = minimax(childState, true, depth - 1, alpha, beta);
 
                 if (eval < minEval) minEval = eval;
                 if (minEval < beta) beta = minEval;
-                if (beta <= alpha) break; 
+                if (beta <= alpha) break;
             }
             return minEval;
         }
     }
 
-    private int heuristic() {
-        int blueDist = getShortestPath(HexGame.BLUE);
-        int redDist = getShortestPath(HexGame.RED);
-        return (redDist - blueDist) * 100;
+    private int heuristic(HexGame state) {
+        int blueDist = getShortestPath(state, HexGame.BLUE);
+        int redDist = getShortestPath(state, HexGame.RED);
+        
+        if (blueDist == INF) blueDist = 1000;
+        if (redDist == INF) redDist = 1000;
+
+        int pathScore = (redDist - blueDist) * 1000; 
+
+        int bluePos = getPositionalScore(state, HexGame.BLUE);
+        int redPos = getPositionalScore(state, HexGame.RED);
+        
+        int posScore = (bluePos - redPos) * 10; 
+
+        return pathScore + posScore;
     }
 
-    private int getShortestPath(int player) {
-        int n = game.getSize();
-        int[][] board = game.getBoard();
+    private int getShortestPath(HexGame state, int player) {
+        int n = state.getSize();
+        int[][] board = state.getBoard();
         int[][] dist = new int[n][n];
+        
         for(int[] row : dist) Arrays.fill(row, INF);
         PriorityQueue<Node> pq = new PriorityQueue<>(Comparator.comparingInt(node -> node.cost));
 
@@ -120,12 +136,29 @@ public class HexAI {
         return INF;
     }
 
-    private List<int[]> getOrderedMoves() {
-        List<int[]> moves = new ArrayList<>();
-        int n = game.getSize();
+    private int getPositionalScore(HexGame state, int player) {
+        int score = 0;
+        int[][] board = state.getBoard();
+        int n = state.getSize();
+        int center = n / 2;
+
         for (int r = 0; r < n; r++) {
             for (int c = 0; c < n; c++) {
-                if (game.isEmpty(r, c)) moves.add(new int[]{r, c});
+                if (board[r][c] == player) {
+                    int dist = Math.abs(r - center) + Math.abs(c - center);
+                    score += (n - dist);
+                }
+            }
+        }
+        return score;
+    }
+
+    private List<int[]> getOrderedMoves(HexGame state) {
+        List<int[]> moves = new ArrayList<>();
+        int n = state.getSize();
+        for (int r = 0; r < n; r++) {
+            for (int c = 0; c < n; c++) {
+                if (state.isEmpty(r, c)) moves.add(new int[]{r, c});
             }
         }
         return moves;
